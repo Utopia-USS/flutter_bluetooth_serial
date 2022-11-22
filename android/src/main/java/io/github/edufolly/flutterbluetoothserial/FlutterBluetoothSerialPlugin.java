@@ -188,34 +188,39 @@ public class FlutterBluetoothSerialPlugin implements FlutterPlugin, ActivityAwar
                                     @SuppressLint("MissingPermission")
                                     @Override
                                     public void success(Object handlerResult) {
-                                        if (handlerResult instanceof Boolean) {
-                                            try {
-                                                final boolean confirm = (Boolean) handlerResult;
-                                                Log.d(TAG, "Trying to set pairing confirmation to " + confirm + " (key: " + pairingKey + ")");
-                                                // @WARN `BLUETOOTH_PRIVILEGED` permission required, but might be
-                                                // unavailable for thrid party apps on newer versions of Androids.
-                                                device.setPairingConfirmation(confirm);
-                                                broadcastResult.abortBroadcast();
-                                            } catch (Exception ex) {
-                                                Log.e(TAG, ex.getMessage());
-                                                ex.printStackTrace();
-                                                // @TODO , passing the error
-                                                //result.error("bond_error", "Auto-confirming pass key failed", exceptionToString(ex));
+                                        try {
+                                            if (handlerResult instanceof Boolean) {
+                                                try {
+                                                    final boolean confirm = (Boolean) handlerResult;
+                                                    Log.d(TAG, "Trying to set pairing confirmation to " + confirm + " (key: " + pairingKey + ")");
+                                                    // @WARN `BLUETOOTH_PRIVILEGED` permission required, but might be
+                                                    // unavailable for thrid party apps on newer versions of Androids.
+                                                    device.setPairingConfirmation(confirm);
+                                                    broadcastResult.abortBroadcast();
+                                                } catch (Exception ex) {
+                                                    Log.e(TAG, ex.getMessage());
+                                                    ex.printStackTrace();
+                                                    // @TODO , passing the error
+                                                    //result.error("bond_error", "Auto-confirming pass key failed", exceptionToString(ex));
+                                                }
+                                            } else {
+                                                Log.d(TAG, "Manual passkey confirmation pairing in progress (key: " + pairingKey + ")");
+                                                ActivityCompat.startActivity(activity, intent, null);
                                             }
-                                        } else {
-                                            Log.d(TAG, "Manual passkey confirmation pairing in progress (key: " + pairingKey + ")");
-                                            ActivityCompat.startActivity(activity, intent, null);
+                                        } finally {
+                                            broadcastResult.finish();
                                         }
-                                        broadcastResult.finish();
                                     }
 
                                     @Override
                                     public void notImplemented() {
+                                        broadcastResult.finish();
                                         throw new UnsupportedOperationException();
                                     }
 
                                     @Override
                                     public void error(String code, String message, Object details) {
+                                        broadcastResult.finish();
                                         Log.e(TAG, code + " " + message);
                                         throw new UnsupportedOperationException();
                                     }
